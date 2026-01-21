@@ -9,7 +9,6 @@ import photon_arrival_timings
 import numpy as np
 import matplotlib.pyplot as plt
 
-# ------------------- Argument Parser -------------------
 parser = argparse.ArgumentParser(description='APODAS Analysis for Photon Count Traces')
 parser.add_argument('--data', type=str, required=True, help='Path to data folder with APODAS log files')
 parser.add_argument('--threads', type=int, required=True, help='Multiprocessing threads')  # kept for future use
@@ -19,12 +18,10 @@ parser.add_argument('--detector', type=str, default='A', choices=['A', 'B'], hel
 parser.add_argument('--interactive', action='store_true', help='Show interactive plot window')
 args = parser.parse_args()
 
-# ------------------- Main Execution -------------------
 if __name__ == '__main__':
     archive_path = './archives/' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     Path(archive_path).mkdir(parents=True, exist_ok=True)
 
-    # Logging setup
     LOGFORMAT = "%(asctime)s.%(msecs)03d  %(log_color)s%(levelname)-8s%(reset)s %(module)s - %(funcName)s: %(log_color)s%(message)s%(reset)s"
     formatter = ColoredFormatter(LOGFORMAT)
     stream = logging.StreamHandler()
@@ -40,16 +37,13 @@ if __name__ == '__main__':
     )
     logging.info(f"Analyzing APODAS data from dir={args.data} with archive path={archive_path}")
 
-    # Find and sort log files (chronological order)
     raw_data_files = sorted(glob.glob(os.path.join(args.data, 'Apodas*.log')))
     logging.info(f"Found {len(raw_data_files)} raw data files")
 
-    # Create single PAT instance and process files SEQUENTIALLY
     PAT = photon_arrival_timings.Photon_Arrival_Timings(archive_path)
     for file in raw_data_files:
         PAT.retrieve_from_log_file(file)
 
-    # Load all extracted timestamps for the chosen detector
     if args.detector == 'A':
         timings_files = sorted(glob.glob(os.path.join(archive_path, 'APD_A_detection_timimngs*.dat')))
     else:
@@ -70,16 +64,13 @@ if __name__ == '__main__':
     if not all_ts_ns:
         raise ValueError("No timestamps found! Check files or detector choice.")
 
-    # Combine and convert to seconds
     all_ts = np.concatenate(all_ts_ns) / 1e9
     all_ts = np.sort(all_ts)
 
-    # Histogram / binning
     bins = np.arange(all_ts.min(), all_ts.max() + args.bin_width, args.bin_width)
     counts, bin_edges = np.histogram(all_ts, bins=bins)
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
-    # Plot - clean line style
     plt.figure(figsize=(14, 6))
     if args.show_rate:
         values = counts / args.bin_width
@@ -97,7 +88,6 @@ if __name__ == '__main__':
     plt.grid(True, alpha=0.3, linestyle='--')
     plt.tight_layout()
 
-    # Save high-quality PNG
     plot_path = os.path.join(archive_path, f'fluorescence_trace_APD_{args.detector}.png')
     plt.savefig(plot_path, dpi=400, bbox_inches='tight')
     logging.info(f"Saved plot as PNG: {plot_path}")
