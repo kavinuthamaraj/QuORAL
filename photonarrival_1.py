@@ -17,7 +17,7 @@ class Photon_Arrival_Timings:
         self.sub_data_array_size = 1024
         self.packet_header_size = 90
         self.first_wrap_around = 0
-        self.last_udp_packet_counter = None  # ← Key change: persist across files
+        self.last_udp_packet_counter = None 
         self.archive_path = archive_path
 
     def make_file_name(self, prefix, file):
@@ -57,7 +57,7 @@ class Photon_Arrival_Timings:
                                 self.number_of_wrap_around += (difference - 1) * 1024
                                 total_missed_packets += difference - 1
                         self.fp_packet_counter.write(f"{packet_counter}\t{udp_packet_counter}\t{difference if difference is not None else 1}\n")
-                        self.last_udp_packet_counter = udp_packet_counter  # ← Update for next file too
+                        self.last_udp_packet_counter = udp_packet_counter  
 
                         sub_data_array = list(fp_file.read(self.sub_data_array_size))
                         self.detection_and_timing_of_pulses(sub_data_array, packet_counter)
